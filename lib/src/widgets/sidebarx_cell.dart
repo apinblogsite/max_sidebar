@@ -148,13 +148,15 @@ class _SidebarXCellState extends State<SidebarXCell> {
                 ],
               ),
             ),
-            if (widget.item.subItems != null && widget.item.subItems!.isNotEmpty)
+            if (widget.item.subItems != null &&
+                widget.item.subItems!.isNotEmpty)
               AnimatedSize(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeInOut,
                 child: widget.isExpanded
                     ? Column(
-                        children: widget.item.subItems!.asMap().entries.map((entry) {
+                        children:
+                            widget.item.subItems!.asMap().entries.map((entry) {
                           final subItem = entry.value;
                           final index = entry.key;
                           return Padding(
@@ -162,7 +164,8 @@ class _SidebarXCellState extends State<SidebarXCell> {
                             child: SidebarXCell(
                               item: subItem,
                               extended: widget.extended,
-                              selected: false, // You might want to update selection logic for sub-items
+                              selected:
+                                  false, // You might want to update selection logic for sub-items
                               theme: theme,
                               onTap: () {
                                 subItem.onTap?.call();

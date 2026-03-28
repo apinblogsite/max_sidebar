@@ -140,7 +140,8 @@ class _SidebarXState extends State<SidebarX>
                       }
                     }
 
-                    final isSelected = widget.controller.selectedIndex == realIndex;
+                    final isSelected =
+                        widget.controller.selectedIndex == realIndex;
 
                     return SidebarXCell(
                       item: item,
@@ -182,16 +183,18 @@ class _SidebarXState extends State<SidebarX>
                         }
                       }
 
-                      final reversedIndex = widget.footerItems.length - index - 1;
+                      final reversedIndex =
+                          widget.footerItems.length - index - 1;
                       int realIndex = baseFooterIndex + reversedIndex;
 
-                      for(int i = 0; i < reversedIndex; i++) {
+                      for (int i = 0; i < reversedIndex; i++) {
                         if (widget.footerItems[i].subItems != null) {
                           realIndex += widget.footerItems[i].subItems!.length;
                         }
                       }
 
-                      final footerIndexId = widget.items.length + reversedIndex; // ID for expansion tracking
+                      final footerIndexId = widget.items.length +
+                          reversedIndex; // ID for expansion tracking
 
                       return SidebarXCell(
                         item: item,
@@ -200,14 +203,16 @@ class _SidebarXState extends State<SidebarX>
                         extended: widget.controller.extended,
                         selected: widget.controller.selectedIndex == realIndex,
                         isExpanded: _expandedIndices.contains(footerIndexId),
-                        onTap: () => _onFooterItemSelected(item, footerIndexId, realIndex),
+                        onTap: () => _onFooterItemSelected(
+                            item, footerIndexId, realIndex),
                         onLongPress: () =>
                             _onFooterItemLongPressSelected(item, index),
                         onSecondaryTap: () =>
                             _onFooterItemSecondaryTapSelected(item, index),
                         onSubItemTap: (subItem, subIndex) {
                           subItem.onTap?.call();
-                          widget.controller.selectIndex(realIndex + subIndex + 1);
+                          widget.controller
+                              .selectIndex(realIndex + subIndex + 1);
                         },
                       );
                     },
@@ -222,7 +227,8 @@ class _SidebarXState extends State<SidebarX>
     );
   }
 
-  void _onFooterItemSelected(SidebarXItem item, int footerIndexId, int realIndex) {
+  void _onFooterItemSelected(
+      SidebarXItem item, int footerIndexId, int realIndex) {
     if (item.subItems != null && item.subItems!.isNotEmpty) {
       if (!widget.controller.extended) {
         widget.controller.toggleExtended();
