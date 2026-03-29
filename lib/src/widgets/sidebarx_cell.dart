@@ -127,7 +127,7 @@ class _SidebarXCellState extends State<SidebarXCell> {
                                 child: Text(
                                   widget.item.label ?? '',
                                   style: textStyle,
-                                  overflow: TextOverflow.fade,
+                                  overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                 ),
                               ),
