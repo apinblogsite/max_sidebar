@@ -158,6 +158,8 @@ class _SidebarXState extends State<SidebarX>
                         subItem.onTap?.call();
                         widget.controller.selectIndex(realIndex + subIndex + 1);
                       },
+                      itemRealIndex: realIndex,
+                      selectedIndex: widget.controller.selectedIndex,
                     );
                   },
                 ),
@@ -214,6 +216,8 @@ class _SidebarXState extends State<SidebarX>
                           widget.controller
                               .selectIndex(realIndex + subIndex + 1);
                         },
+                        itemRealIndex: realIndex,
+                        selectedIndex: widget.controller.selectedIndex,
                       );
                     },
                   ),

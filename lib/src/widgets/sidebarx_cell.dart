@@ -14,6 +14,8 @@ class SidebarXCell extends StatefulWidget {
     required this.animationController,
     this.isExpanded = false,
     this.onSubItemTap,
+    this.itemRealIndex,
+    this.selectedIndex,
   }) : super(key: key);
 
   final bool extended;
@@ -26,6 +28,8 @@ class SidebarXCell extends StatefulWidget {
   final AnimationController animationController;
   final bool isExpanded;
   final void Function(SidebarXItem, int)? onSubItemTap;
+  final int? itemRealIndex;
+  final int? selectedIndex;
 
   @override
   State<SidebarXCell> createState() => _SidebarXCellState();
@@ -164,8 +168,11 @@ class _SidebarXCellState extends State<SidebarXCell> {
                             child: SidebarXCell(
                               item: subItem,
                               extended: widget.extended,
-                              selected:
-                                  false, // You might want to update selection logic for sub-items
+                              selected: widget.itemRealIndex != null &&
+                                      widget.selectedIndex != null
+                                  ? widget.selectedIndex ==
+                                      (widget.itemRealIndex! + index + 1)
+                                  : false,
                               theme: theme,
                               onTap: () {
                                 subItem.onTap?.call();
