@@ -1,3 +1,15 @@
+## 0.18.0
+* Add **id** field for **SidebarXItem** to give items a stable identity
+* Add item lookup API on **SidebarXController**: **itemAt**, **indexOf**, **indexOfId**, **selectedItem** — apps no longer need to duplicate the flat (pre-order) index calculation
+* Add hierarchy API on **SidebarXController**: **parentOf** and **selectedParent** to distinguish top-level items from sub-items under a category header
+* Add **onItemSelected** callback on **SidebarXController** that receives the resolved **SidebarXItem** on every selection
+* Add **selectById** method on **SidebarXController**
+* Add `notify` parameter to **selectIndex** (`selectIndex(index, notify: false)`) for silent state restore without triggering listeners or **onItemSelected**
+* **selectIndex** on an expandable-only header (`isExpandableOnly: true` with sub-items) is now forwarded to its first child, so the selection never lands on a header without content
+* Add **onExpansionChanged** callback on **SidebarX** fired when a category header is expanded or collapsed
+* **SidebarXTheme.mergeFlutterTheme** now derives default colors from `ColorScheme` (`surface`, `onSurfaceVariant`, `primary`), so the sidebar follows light/dark theme changes consistently
+* Fix sub-item **onTap** being invoked twice per tap
+
 ## 0.17.2
 * Fix **SidebarXTheme** hoverIconTheme field merging in **mergeFlutterTheme** method
 

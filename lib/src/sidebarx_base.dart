@@ -20,6 +20,7 @@ class SidebarX extends StatefulWidget {
     this.animationDuration = const Duration(milliseconds: 300),
     this.collapseIcon = Icons.arrow_back_ios_new,
     this.extendIcon = Icons.arrow_forward_ios,
+    this.onExpansionChanged,
   }) : super(key: key);
 
   /// Default theme of Sidebar
@@ -66,6 +67,10 @@ class SidebarX extends StatefulWidget {
   /// Extend Icon
   final IconData extendIcon;
 
+  /// Called when an expandable item (category header) is expanded
+  /// or collapsed
+  final void Function(SidebarXItem item, bool expanded)? onExpansionChanged;
+
   @override
   State<SidebarX> createState() => _SidebarXState();
 }
@@ -77,6 +82,10 @@ class _SidebarXState extends State<SidebarX>
 
   @override
   void initState() {
+    widget.controller.registerItems(
+      widget.items,
+      footerItems: widget.footerItems,
+    );
     _animationController = AnimationController(
       vsync: this,
       duration: widget.animationDuration,
@@ -97,6 +106,19 @@ class _SidebarXState extends State<SidebarX>
     );
 
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant SidebarX oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller ||
+        !identical(oldWidget.items, widget.items) ||
+        !identical(oldWidget.footerItems, widget.footerItems)) {
+      widget.controller.registerItems(
+        widget.items,
+        footerItems: widget.footerItems,
+      );
+    }
   }
 
   @override
@@ -155,7 +177,7 @@ class _SidebarXState extends State<SidebarX>
                       onSecondaryTap: () =>
                           _onItemSecondaryTapSelected(item, index),
                       onSubItemTap: (subItem, subIndex) {
-                        subItem.onTap?.call();
+                        // subItem.onTap is already invoked by SidebarXCell
                         widget.controller.selectIndex(realIndex + subIndex + 1);
                       },
                       itemRealIndex: realIndex,
@@ -212,7 +234,7 @@ class _SidebarXState extends State<SidebarX>
                         onSecondaryTap: () =>
                             _onFooterItemSecondaryTapSelected(item, index),
                         onSubItemTap: (subItem, subIndex) {
-                          subItem.onTap?.call();
+                          // subItem.onTap is already invoked by SidebarXCell
                           widget.controller
                               .selectIndex(realIndex + subIndex + 1);
                         },
@@ -237,13 +259,15 @@ class _SidebarXState extends State<SidebarX>
       if (!widget.controller.extended) {
         widget.controller.toggleExtended();
       }
+      final expanded = !_expandedIndices.contains(footerIndexId);
       setState(() {
-        if (_expandedIndices.contains(footerIndexId)) {
-          _expandedIndices.remove(footerIndexId);
-        } else {
+        if (expanded) {
           _expandedIndices.add(footerIndexId);
+        } else {
+          _expandedIndices.remove(footerIndexId);
         }
       });
+      widget.onExpansionChanged?.call(item, expanded);
       if (item.isExpandableOnly) return;
     }
 
@@ -266,13 +290,15 @@ class _SidebarXState extends State<SidebarX>
       if (!widget.controller.extended) {
         widget.controller.toggleExtended();
       }
+      final expanded = !_expandedIndices.contains(index);
       setState(() {
-        if (_expandedIndices.contains(index)) {
-          _expandedIndices.remove(index);
-        } else {
+        if (expanded) {
           _expandedIndices.add(index);
+        } else {
+          _expandedIndices.remove(index);
         }
       });
+      widget.onExpansionChanged?.call(item, expanded);
       if (item.isExpandableOnly) return;
     }
 

@@ -7,6 +7,7 @@ typedef SidebarXItemBuilder = Widget Function(
 
 class SidebarXItem {
   const SidebarXItem({
+    this.id,
     this.label,
     this.icon,
     @Deprecated('Use iconBuilder instead') this.iconWidget,
@@ -21,6 +22,14 @@ class SidebarXItem {
           (icon != null || iconBuilder != null || iconWidget != null),
           'You can create SidebarXItem with IconData? icon or with Widget? iconWidget',
         );
+
+  /// Optional stable identity for this item.
+  ///
+  /// Lets applications map the selected item to app-level data
+  /// (screens, routes, analytics) without duplicating the library's
+  /// flat index calculation. See [SidebarXController.itemAt],
+  /// [SidebarXController.indexOfId] and [SidebarXController.selectById].
+  final String? id;
 
   final String? label;
   final IconData? icon;
