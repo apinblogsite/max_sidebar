@@ -87,20 +87,27 @@ class SidebarXTheme {
   final TextStyle? hoverTextStyle;
 
   /// Method to get default flutter theme settings
+  ///
+  /// Defaults derive from [ColorScheme] so the sidebar follows
+  /// light/dark brightness changes without manual rebuilds
   SidebarXTheme mergeFlutterTheme(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final mergedTheme = SidebarXTheme(
       width: width,
       height: height,
       padding: padding,
       margin: margin,
-      decoration: decoration ?? BoxDecoration(color: theme.cardColor),
-      iconTheme: iconTheme ?? theme.iconTheme,
+      decoration: decoration ?? BoxDecoration(color: colorScheme.surface),
+      iconTheme: iconTheme ??
+          theme.iconTheme.copyWith(color: colorScheme.onSurfaceVariant),
       selectedIconTheme: selectedIconTheme ??
-          theme.iconTheme.copyWith(color: theme.primaryColor),
-      textStyle: textStyle ?? theme.textTheme.bodyMedium,
+          theme.iconTheme.copyWith(color: colorScheme.primary),
+      textStyle: textStyle ??
+          theme.textTheme.bodyMedium
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
       selectedTextStyle: selectedTextStyle ??
-          theme.textTheme.bodyMedium?.copyWith(color: theme.primaryColor),
+          theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
       itemDecoration: itemDecoration,
       selectedItemDecoration: selectedItemDecoration,
       itemMargin: itemMargin,
@@ -111,9 +118,9 @@ class SidebarXTheme {
       selectedItemTextPadding: selectedItemTextPadding,
       hoverColor: hoverColor ?? theme.hoverColor,
       hoverTextStyle: hoverTextStyle ??
-          theme.textTheme.bodyMedium?.copyWith(color: theme.primaryColor),
-      hoverIconTheme:
-          hoverIconTheme ?? theme.iconTheme.copyWith(color: theme.primaryColor),
+          theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
+      hoverIconTheme: hoverIconTheme ??
+          theme.iconTheme.copyWith(color: colorScheme.primary),
     );
     return mergedTheme;
   }
