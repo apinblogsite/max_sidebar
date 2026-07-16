@@ -11,6 +11,7 @@ class TestSidebarX extends StatelessWidget {
     this.animationDuration = const Duration(milliseconds: 300),
     this.onExpansionChanged,
     this.theme = const SidebarXTheme(),
+    this.collapsedSubmenuFlyout = true,
   }) : super(key: key);
 
   final SidebarXController controller;
@@ -20,6 +21,7 @@ class TestSidebarX extends StatelessWidget {
   final Duration animationDuration;
   final void Function(SidebarXItem item, bool expanded)? onExpansionChanged;
   final SidebarXTheme theme;
+  final bool collapsedSubmenuFlyout;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,7 @@ class TestSidebarX extends StatelessWidget {
           toggleButtonBuilder: toggleButtonBuilder,
           onExpansionChanged: onExpansionChanged,
           theme: theme,
+          collapsedSubmenuFlyout: collapsedSubmenuFlyout,
         ),
       ),
     );
