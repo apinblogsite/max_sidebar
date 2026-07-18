@@ -1,3 +1,8 @@
+## 0.19.1
+* Fix toggle animation direction: the extend/collapse animation now follows the actual `extended` value instead of guessing from animation state, so rapid toggling via `setExtended`/`toggleExtended` can no longer desync the animation from the sidebar state
+* Fix `extendStream` subscription leak: **SidebarX** now cancels its subscription on dispose and re-subscribes when the controller instance changes
+* Flat index (`realIndex`) is now resolved through **SidebarXController.indexOf** instead of duplicated manual calculations in the widget, making `registerItems` the single source of truth for index math
+
 ## 0.19.0
 * **Fix collapsed-mode sub-menu UX anomaly**: tapping an item with sub-items while the sidebar is collapsed no longer force-extends the sidebar
 * **New: flyout sub-menu popup** — in collapsed (icon-only) mode, tapping a parent item opens a popup anchored next to the icon listing its sub-items (matching the common collapsible-sidebar pattern). Tap outside to dismiss; selecting a sub-item closes the flyout

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
 import 'package:sidebarx/src/widgets/widgets.dart';
@@ -87,6 +89,7 @@ class SidebarX extends StatefulWidget {
 class _SidebarXState extends State<SidebarX>
     with SingleTickerProviderStateMixin {
   AnimationController? _animationController;
+  StreamSubscription<bool>? _extendedSubscription;
   final Set<int> _expandedIndices = {};
 
   @override
@@ -104,12 +107,12 @@ class _SidebarXState extends State<SidebarX>
     } else {
       _animationController?.reverse();
     }
-    widget.controller.extendStream.listen(
+    _extendedSubscription = widget.controller.extendStream.listen(
       (extended) {
-        if (_animationController?.isCompleted ?? false) {
-          _animationController?.reverse();
-        } else {
+        if (extended) {
           _animationController?.forward();
+        } else {
+          _animationController?.reverse();
         }
       },
     );
@@ -120,6 +123,18 @@ class _SidebarXState extends State<SidebarX>
   @override
   void didUpdateWidget(covariant SidebarX oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _extendedSubscription?.cancel();
+      _extendedSubscription = widget.controller.extendStream.listen(
+        (extended) {
+          if (extended) {
+            _animationController?.forward();
+          } else {
+            _animationController?.reverse();
+          }
+        },
+      );
+    }
     if (oldWidget.controller != widget.controller ||
         !identical(oldWidget.items, widget.items) ||
         !identical(oldWidget.footerItems, widget.footerItems)) {
@@ -162,15 +177,7 @@ class _SidebarXState extends State<SidebarX>
                       (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final item = widget.items[index];
-
-                    // Count previous sub-items to calculate correct real index
-                    int realIndex = index;
-                    for (int i = 0; i < index; i++) {
-                      if (widget.items[i].subItems != null) {
-                        realIndex += widget.items[i].subItems!.length;
-                      }
-                    }
-
+                    final realIndex = widget.controller.indexOf(item);
                     final isSelected = _isItemSelected(item, realIndex);
 
                     return SidebarXCell(
@@ -206,25 +213,10 @@ class _SidebarXState extends State<SidebarX>
                     separatorBuilder: widget.separatorBuilder ??
                         (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
-                      final item = widget.footerItems.reversed.toList()[index];
-
-                      // Base index of footer items
-                      int baseFooterIndex = widget.items.length;
-                      for (int i = 0; i < widget.items.length; i++) {
-                        if (widget.items[i].subItems != null) {
-                          baseFooterIndex += widget.items[i].subItems!.length;
-                        }
-                      }
-
                       final reversedIndex =
                           widget.footerItems.length - index - 1;
-                      int realIndex = baseFooterIndex + reversedIndex;
-
-                      for (int i = 0; i < reversedIndex; i++) {
-                        if (widget.footerItems[i].subItems != null) {
-                          realIndex += widget.footerItems[i].subItems!.length;
-                        }
-                      }
+                      final item = widget.footerItems[reversedIndex];
+                      final realIndex = widget.controller.indexOf(item);
 
                       final footerIndexId = widget.items.length +
                           reversedIndex; // ID for expansion tracking
@@ -407,6 +399,8 @@ class _SidebarXState extends State<SidebarX>
 
   @override
   void dispose() {
+    _extendedSubscription?.cancel();
+    _extendedSubscription = null;
     _animationController?.dispose();
     _animationController = null;
     super.dispose();
