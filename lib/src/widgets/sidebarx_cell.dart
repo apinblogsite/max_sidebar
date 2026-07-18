@@ -250,32 +250,53 @@ class _SidebarXCellState extends State<SidebarXCell> {
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeInOut,
                 child: (widget.isExpanded && widget.extended)
-                    ? Column(
-                        children:
-                            widget.item.subItems!.asMap().entries.map((entry) {
-                          final subItem = entry.value;
-                          final index = entry.key;
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 16.0),
-                            child: SidebarXCell(
-                              item: subItem,
-                              extended: widget.extended,
-                              selected: widget.itemRealIndex != null &&
-                                      widget.selectedIndex != null
-                                  ? widget.selectedIndex ==
-                                      (widget.itemRealIndex! + index + 1)
-                                  : false,
-                              theme: theme,
-                              onTap: () {
-                                subItem.onTap?.call();
-                                widget.onSubItemTap?.call(subItem, index);
-                              },
-                              onLongPress: subItem.onLongPress ?? () {},
-                              onSecondaryTap: subItem.onSecondaryTap ?? () {},
-                              animationController: widget.animationController,
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 24.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              left: BorderSide(
+                                color: (theme.iconTheme?.color ??
+                                        Theme.of(context)
+                                            .dividerColor)
+                                    .withAlpha(60),
+                                width: 1,
+                              ),
                             ),
-                          );
-                        }).toList(),
+                          ),
+                          child: Column(
+                            children: widget.item.subItems!
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              final subItem = entry.value;
+                              final index = entry.key;
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: SidebarXCell(
+                                  item: subItem,
+                                  extended: widget.extended,
+                                  selected: widget.itemRealIndex != null &&
+                                          widget.selectedIndex != null
+                                      ? widget.selectedIndex ==
+                                          (widget.itemRealIndex! + index + 1)
+                                      : false,
+                                  theme: theme,
+                                  onTap: () {
+                                    subItem.onTap?.call();
+                                    widget.onSubItemTap
+                                        ?.call(subItem, index);
+                                  },
+                                  onLongPress: subItem.onLongPress ?? () {},
+                                  onSecondaryTap:
+                                      subItem.onSecondaryTap ?? () {},
+                                  animationController:
+                                      widget.animationController,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       )
                     : const SizedBox.shrink(),
               ),
