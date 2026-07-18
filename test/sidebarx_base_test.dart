@@ -140,6 +140,150 @@ void main() {
       await tester.pumpAndSettle();
       expect(expansionEvents, ['header:true', 'header:false']);
     });
+
+    testWidgets(
+        'Collapsed sidebar shows flyout submenu instead of force-extending',
+        (tester) async {
+      var subTapCount = 0;
+      final controller = SidebarXController(selectedIndex: 0, extended: false);
+      final subItem = SidebarXItem(
+        id: 'sub',
+        icon: Icons.list,
+        label: 'Sub item',
+        onTap: () => subTapCount++,
+      );
+      final header = SidebarXItem(
+        id: 'header',
+        icon: Icons.category,
+        label: 'Category',
+        isExpandableOnly: true,
+        subItems: [subItem],
+      );
+      await tester.pumpWidget(
+        TestSidebarX(
+          animationDuration: Duration.zero,
+          controller: controller,
+          items: [
+            const SidebarXItem(id: 'home', icon: Icons.home, label: 'Home'),
+            header,
+          ],
+        ),
+      );
+
+      // The sub item is not visible before tapping the header.
+      expect(find.text('Sub item'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.category));
+      await tester.pumpAndSettle();
+
+      // Sidebar must remain collapsed, and the flyout must be visible.
+      expect(controller.extended, false);
+      expect(find.text('Sub item'), findsOneWidget);
+
+      // Selecting a sub item from the flyout selects it and closes
+      // the flyout.
+      await tester.tap(find.text('Sub item'));
+      await tester.pumpAndSettle();
+      expect(subTapCount, 1);
+      expect(controller.selectedIndex, 2);
+      expect(controller.selectedItem?.id, 'sub');
+      expect(find.text('Sub item'), findsNothing);
+      expect(controller.extended, false);
+    });
+
+    testWidgets('Flyout closes when tapping outside', (tester) async {
+      final controller = SidebarXController(selectedIndex: 0, extended: false);
+      const subItem = SidebarXItem(id: 'sub', icon: Icons.list, label: 'Sub');
+      const header = SidebarXItem(
+        id: 'header',
+        icon: Icons.category,
+        label: 'Category',
+        isExpandableOnly: true,
+        subItems: [subItem],
+      );
+      await tester.pumpWidget(
+        TestSidebarX(
+          animationDuration: Duration.zero,
+          controller: controller,
+          items: const [
+            SidebarXItem(id: 'home', icon: Icons.home, label: 'Home'),
+            header,
+          ],
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.category));
+      await tester.pumpAndSettle();
+      expect(find.text('Sub'), findsOneWidget);
+
+      // Tap far away from the flyout to dismiss it.
+      await tester.tapAt(const Offset(700, 500));
+      await tester.pumpAndSettle();
+      expect(find.text('Sub'), findsNothing);
+      expect(controller.extended, false);
+    });
+
+    testWidgets(
+        'collapsedSubmenuFlyout: false keeps legacy force-extend behavior',
+        (tester) async {
+      final controller = SidebarXController(selectedIndex: 0, extended: false);
+      const subItem = SidebarXItem(id: 'sub', icon: Icons.list, label: 'Sub');
+      const header = SidebarXItem(
+        id: 'header',
+        icon: Icons.category,
+        label: 'Category',
+        isExpandableOnly: true,
+        subItems: [subItem],
+      );
+      await tester.pumpWidget(
+        TestSidebarX(
+          animationDuration: Duration.zero,
+          controller: controller,
+          collapsedSubmenuFlyout: false,
+          items: const [
+            SidebarXItem(id: 'home', icon: Icons.home, label: 'Home'),
+            header,
+          ],
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.category));
+      await tester.pumpAndSettle();
+      expect(controller.extended, true);
+      expect(find.text('Sub'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Collapsed parent is highlighted when one of its sub items '
+        'is selected', (tester) async {
+      final controller = SidebarXController(selectedIndex: 2, extended: false);
+      const subItem = SidebarXItem(id: 'sub', icon: Icons.list, label: 'Sub');
+      const header = SidebarXItem(
+        id: 'header',
+        icon: Icons.category,
+        label: 'Category',
+        isExpandableOnly: true,
+        subItems: [subItem],
+      );
+      const selectedColor = Color(0xFF123456);
+      await tester.pumpWidget(
+        TestSidebarX(
+          animationDuration: Duration.zero,
+          controller: controller,
+          theme: const SidebarXTheme(
+            selectedIconTheme: IconThemeData(color: selectedColor),
+          ),
+          items: const [
+            SidebarXItem(id: 'home', icon: Icons.home, label: 'Home'),
+            header,
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final icon = tester.widget<Icon>(find.byIcon(Icons.category));
+      expect(icon.color, selectedColor);
+    });
   });
 }
 

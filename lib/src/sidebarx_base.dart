@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
 import 'package:sidebarx/src/widgets/widgets.dart';
@@ -21,6 +23,7 @@ class SidebarX extends StatefulWidget {
     this.collapseIcon = Icons.arrow_back_ios_new,
     this.extendIcon = Icons.arrow_forward_ios,
     this.onExpansionChanged,
+    this.collapsedSubmenuFlyout = true,
   }) : super(key: key);
 
   /// Default theme of Sidebar
@@ -71,6 +74,14 @@ class SidebarX extends StatefulWidget {
   /// or collapsed
   final void Function(SidebarXItem item, bool expanded)? onExpansionChanged;
 
+  /// When `true` (default), tapping an item with sub-items while the
+  /// sidebar is collapsed opens a flyout popup anchored next to the
+  /// icon instead of force-extending the sidebar.
+  ///
+  /// When `false`, the legacy behavior is used: the sidebar extends
+  /// and the sub-menu expands inline.
+  final bool collapsedSubmenuFlyout;
+
   @override
   State<SidebarX> createState() => _SidebarXState();
 }
@@ -78,6 +89,7 @@ class SidebarX extends StatefulWidget {
 class _SidebarXState extends State<SidebarX>
     with SingleTickerProviderStateMixin {
   AnimationController? _animationController;
+  StreamSubscription<bool>? _extendedSubscription;
   final Set<int> _expandedIndices = {};
 
   @override
@@ -95,12 +107,12 @@ class _SidebarXState extends State<SidebarX>
     } else {
       _animationController?.reverse();
     }
-    widget.controller.extendStream.listen(
+    _extendedSubscription = widget.controller.extendStream.listen(
       (extended) {
-        if (_animationController?.isCompleted ?? false) {
-          _animationController?.reverse();
-        } else {
+        if (extended) {
           _animationController?.forward();
+        } else {
+          _animationController?.reverse();
         }
       },
     );
@@ -111,6 +123,18 @@ class _SidebarXState extends State<SidebarX>
   @override
   void didUpdateWidget(covariant SidebarX oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _extendedSubscription?.cancel();
+      _extendedSubscription = widget.controller.extendStream.listen(
+        (extended) {
+          if (extended) {
+            _animationController?.forward();
+          } else {
+            _animationController?.reverse();
+          }
+        },
+      );
+    }
     if (oldWidget.controller != widget.controller ||
         !identical(oldWidget.items, widget.items) ||
         !identical(oldWidget.footerItems, widget.footerItems)) {
@@ -153,17 +177,8 @@ class _SidebarXState extends State<SidebarX>
                       (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final item = widget.items[index];
-
-                    // Count previous sub-items to calculate correct real index
-                    int realIndex = index;
-                    for (int i = 0; i < index; i++) {
-                      if (widget.items[i].subItems != null) {
-                        realIndex += widget.items[i].subItems!.length;
-                      }
-                    }
-
-                    final isSelected =
-                        widget.controller.selectedIndex == realIndex;
+                    final realIndex = widget.controller.indexOf(item);
+                    final isSelected = _isItemSelected(item, realIndex);
 
                     return SidebarXCell(
                       item: item,
@@ -171,6 +186,7 @@ class _SidebarXState extends State<SidebarX>
                       animationController: _animationController!,
                       extended: widget.controller.extended,
                       selected: isSelected,
+                      collapsedSubmenuFlyout: widget.collapsedSubmenuFlyout,
                       isExpanded: _expandedIndices.contains(index),
                       onTap: () => _onItemSelected(item, index, realIndex),
                       onLongPress: () => _onItemLongPressSelected(item, index),
@@ -197,25 +213,10 @@ class _SidebarXState extends State<SidebarX>
                     separatorBuilder: widget.separatorBuilder ??
                         (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
-                      final item = widget.footerItems.reversed.toList()[index];
-
-                      // Base index of footer items
-                      int baseFooterIndex = widget.items.length;
-                      for (int i = 0; i < widget.items.length; i++) {
-                        if (widget.items[i].subItems != null) {
-                          baseFooterIndex += widget.items[i].subItems!.length;
-                        }
-                      }
-
                       final reversedIndex =
                           widget.footerItems.length - index - 1;
-                      int realIndex = baseFooterIndex + reversedIndex;
-
-                      for (int i = 0; i < reversedIndex; i++) {
-                        if (widget.footerItems[i].subItems != null) {
-                          realIndex += widget.footerItems[i].subItems!.length;
-                        }
-                      }
+                      final item = widget.footerItems[reversedIndex];
+                      final realIndex = widget.controller.indexOf(item);
 
                       final footerIndexId = widget.items.length +
                           reversedIndex; // ID for expansion tracking
@@ -225,8 +226,9 @@ class _SidebarXState extends State<SidebarX>
                         theme: t,
                         animationController: _animationController!,
                         extended: widget.controller.extended,
-                        selected: widget.controller.selectedIndex == realIndex,
+                        selected: _isItemSelected(item, realIndex),
                         isExpanded: _expandedIndices.contains(footerIndexId),
+                        collapsedSubmenuFlyout: widget.collapsedSubmenuFlyout,
                         onTap: () => _onFooterItemSelected(
                             item, footerIndexId, realIndex),
                         onLongPress: () =>
@@ -253,10 +255,39 @@ class _SidebarXState extends State<SidebarX>
     );
   }
 
+  /// Whether the cell for [item] at [realIndex] should render as selected.
+  ///
+  /// While the sidebar is collapsed, a parent item is also highlighted
+  /// when one of its sub-items is the current selection, so the active
+  /// section stays visible in icon-only mode.
+  bool _isItemSelected(SidebarXItem item, int realIndex) {
+    final selectedIndex = widget.controller.selectedIndex;
+    if (selectedIndex == realIndex) return true;
+    final subCount = item.subItems?.length ?? 0;
+    if (!widget.controller.extended &&
+        subCount > 0 &&
+        selectedIndex > realIndex &&
+        selectedIndex <= realIndex + subCount) {
+      return true;
+    }
+    return false;
+  }
+
   void _onFooterItemSelected(
       SidebarXItem item, int footerIndexId, int realIndex) {
     if (item.subItems != null && item.subItems!.isNotEmpty) {
       if (!widget.controller.extended) {
+        if (widget.collapsedSubmenuFlyout) {
+          // Collapsed mode: the cell opens a flyout popup next to the
+          // icon. Do not force-extend the sidebar or mutate the inline
+          // expansion state.
+          if (item.isExpandableOnly) return;
+          item.onTap?.call();
+          if (item.selectable) {
+            widget.controller.selectIndex(realIndex);
+          }
+          return;
+        }
         widget.controller.toggleExtended();
       }
       final expanded = !_expandedIndices.contains(footerIndexId);
@@ -288,6 +319,17 @@ class _SidebarXState extends State<SidebarX>
   void _onItemSelected(SidebarXItem item, int index, int realIndex) {
     if (item.subItems != null && item.subItems!.isNotEmpty) {
       if (!widget.controller.extended) {
+        if (widget.collapsedSubmenuFlyout) {
+          // Collapsed mode: the cell opens a flyout popup next to the
+          // icon. Do not force-extend the sidebar or mutate the inline
+          // expansion state.
+          if (item.isExpandableOnly) return;
+          item.onTap?.call();
+          if (item.selectable) {
+            widget.controller.selectIndex(realIndex);
+          }
+          return;
+        }
         widget.controller.toggleExtended();
       }
       final expanded = !_expandedIndices.contains(index);
@@ -357,6 +399,8 @@ class _SidebarXState extends State<SidebarX>
 
   @override
   void dispose() {
+    _extendedSubscription?.cancel();
+    _extendedSubscription = null;
     _animationController?.dispose();
     _animationController = null;
     super.dispose();
