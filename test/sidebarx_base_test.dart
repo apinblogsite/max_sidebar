@@ -240,6 +240,9 @@ void main() {
           animationDuration: Duration.zero,
           controller: controller,
           collapsedSubmenuFlyout: false,
+          // Wide enough for the extended rail so the chevron row
+          // does not overflow at the default 70px width
+          theme: const SidebarXTheme(width: 250),
           items: const [
             SidebarXItem(id: 'home', icon: Icons.home, label: 'Home'),
             header,

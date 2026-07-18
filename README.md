@@ -96,6 +96,24 @@ SidebarXItem(
 ),
 ```
 
+When the sidebar is **extended**, an expanded sub-menu renders its items
+behind a subtle vertical **indent guide line** (the common tree/nesting
+indicator). The line color derives from the theme's icon color (falling back
+to `Theme.dividerColor`) at low alpha, so it stays subtle in both light and
+dark themes.
+
+#### Collapsed (icon-only) mode: flyout sub-menu
+
+Since 0.19.0, tapping a parent item while the sidebar is collapsed no longer
+force-extends the sidebar. Instead, a **flyout popup** anchored next to the
+icon lists its sub-items — tap outside to dismiss, selecting a sub-item
+closes it. Inline sub-menus are not rendered in the narrow rail, and a parent
+icon is highlighted when one of its sub-items is the current selection, so
+the active section stays visible in icon-only mode.
+
+Set `collapsedSubmenuFlyout: false` on `SidebarX` to restore the legacy
+behavior (extend the sidebar and expand the sub-menu inline).
+
 ### The flat index space
 
 `selectedIndex` addresses items in **pre-order**: each item is followed by its
@@ -204,6 +222,7 @@ controller.onItemSelected = (item) {
 | `collapseIcon` / `extendIcon` | Icons for the built-in toggle button. |
 | `animationDuration` | Extend/collapse animation duration. |
 | `onExpansionChanged` | `void Function(SidebarXItem item, bool expanded)?` — called when a category header is expanded or collapsed. Useful for analytics or persisting expansion state across sessions. |
+| `collapsedSubmenuFlyout` | When `true` (default), tapping a parent item while collapsed opens a flyout popup next to the icon instead of force-extending the sidebar. Set `false` for the legacy extend-and-expand-inline behavior. |
 
 ```dart
 SidebarX(
